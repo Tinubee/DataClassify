@@ -1,5 +1,7 @@
 ﻿using DevExpress.Data.Helpers;
+using DevExpress.XtraEditors.Filtering.Templates;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -70,20 +72,15 @@ namespace DataClassify
 
         private void b파일변환_Click(object sender, EventArgs e)
         {
-            // Date : 2308010048B
-            // CSC Code : [2],[3] ^MPL02866AA; 2308010040B; [05193419AA;TXXCC1702300166;] DD4C5B9BA8FCFFFF;190623;B1;V003;$
-            // Address : [4],[5]^MPL02866AA; 2308010040B; 05193419AA;TXXCC1702300166; [DD4C5B9BA8FCFFFF;190623;B1;V003;] $
-            // FFCRR : ^R00070;AB230628;$
-            // FFCFR :^F00103;AB230628;$
-
             for (int lop = 0; lop < 행정보.Count; lop++)
             {
                 string[] spliteText = 행정보[lop].Split(';');
                 if (lop % 3 == 0)
                 {
                     if (lop > 2) indexNumber++;
+
                     DateTime 시간 = ConvertToDateTime(spliteText[1]);
-                    
+                    c최종정보[indexNumber].첫번째바코드 = 행정보[lop];
                     c최종정보[indexNumber].일자 = 시간.ToString("yyyy-MM-dd");
                     c최종정보[indexNumber].시간 = 시간.ToString("HH:mm:ss");
                     c최종정보[indexNumber].CSC코드 = $"{spliteText[2]}-{spliteText[3]}";
@@ -101,10 +98,22 @@ namespace DataClassify
                     }
                 }
             }
-
+            중복항목제거();
             lb상태확인.Text = "데이터 변환완료.";
         }
 
+        public void 중복항목제거()
+        {
+            var duplicateIds = c최종정보
+          .GroupBy(item => item.첫번째바코드)
+          .Where(group => group.Count() > 1)
+          .Select(group => group.Key)
+          .ToList();
+
+            c최종정보.RemoveAll(item => duplicateIds.Contains(item.첫번째바코드));
+
+            var check = c최종정보;
+        }
 
         static DateTime ConvertToDateTime(string inputString)
         {
@@ -115,11 +124,9 @@ namespace DataClassify
             int year = int.Parse(datePart.Substring(0, 2)) + 2000;
             int month = int.Parse(datePart.Substring(2, 2));
             int day = int.Parse(datePart.Substring(4, 2));
-            int hour = int.Parse(timePart.Substring(0, 2));
-            int minute = int.Parse(timePart.Substring(2, 2));
-
             Random random = new Random();
-            // Generate a random number between 0 and 59 (inclusive).
+            int hour = random.Next(0, 24);
+            int minute = random.Next(0, 60);
             int randomNumber = random.Next(0, 60);
 
             DateTime dateTime = new DateTime(year, month, day, hour, minute, randomNumber);
